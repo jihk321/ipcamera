@@ -1,0 +1,4 @@
+python train.py --img 640 --batch 100 --epochs 10000 --data data/wlsdyd.yaml --cfg models/yolov5n.yaml --weights yolov5n.pt
+
+
+python train.py --img 640 --batch 100 --epochs 10000 --data data/human.yaml --cfg models/yolov5n.yaml --weights yolov5n.pt --optimizer Adam

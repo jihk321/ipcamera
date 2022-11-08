@@ -6,6 +6,16 @@ import numpy as np
 import torch 
 import paho.mqtt.client as mqtt
 
+class detectmodel():
+    def __init__(self) :
+        self.model = torch.hub.load(r'C:\Users\goback\Downloads\yolov5-master\yolov5-master', 'custom', path='people.pt', source='local',force_reload=True)
+        self.model.conf = 0.6
+        self.model.classes = [0]
+
+    def detection(self,img):
+        result = self.model(img)
+        return result
+det = detectmodel()
 class IpCamera:
 
     def __init__(self,ip, hport ,rport ,id, pw) :
@@ -82,7 +92,7 @@ class IpCamera:
             tick = datetime.datetime.today().second
         
             # out.write(gray)
-            result = model(gray)
+            result = det.detection(gray)
             if result.xyxy[0].shape[0] > 0 :
                 start = time.time()
                 # result.save(save_dir= r'C:\Users\goback\Documents\result')
@@ -117,7 +127,7 @@ class IpCamera:
             if tok >= 59 : tok = 0 # 0~60초  
             # print(result)
             frame = cv2.resize(frame, dsize=(0,0), fx=0.5, fy=0.5, interpolation=cv2.INTER_AREA)
-            cv2.imshow(self.device_info['DeviceName'], frame)
+            cv2.imshow(device_name, frame)
 
             k = cv2.waitKey(1) & 0xff
             if k == 27: break
@@ -172,9 +182,6 @@ class IpCamera:
 
 from multiprocessing import Process
 
-model = torch.hub.load(r'C:\Users\goback\Downloads\yolov5-master\yolov5-master', 'custom', path='h7.pt', source='local',force_reload=True)
-model.conf = 0.4
-
 def cam1():
     first = IpCamera(ip='192.168.0.45', hport=80, rport=554 ,id='admin', pw='goback2022')
     first.get_device()
@@ -196,12 +203,11 @@ def get_pic():
     g.get_date()
 
 if __name__ == '__main__':
-    # p1 = Process(target=cam1)
-    p2 = Process(target=cam2)
-    # p3 = Process(target=cam3)
-    # p1.start()
-    p2.start()
-    # p3.start()
-
+    p1 = Process(target=cam1)
+    # p2 = Process(target=cam2)
+    p3 = Process(target=cam3)
+    p1.start()
+    # p2.start()
+    p3.start()
 
 # r = requests.get(url='http://192.168.0.45:80/stw-cgi/system.cgi?', params= {'msubmenu' : 'deviceinfo', 'action' : 'view'}, auth=HTTPDigestAuth('admin','goback2022'))

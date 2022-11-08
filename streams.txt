@@ -1,0 +1,3 @@
+rtsp://root:root@220.82.139.41:554/cam0_0
+rtsp://admin:goback2022@192.168.0.45:554/profile2/media.smp
+rtsp://root:goback2022@221.159.47.49:10557/profile2/media.smp
