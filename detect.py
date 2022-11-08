@@ -26,7 +26,7 @@ Usage - formats:
 """
 
 import argparse
-import datetime
+import time,datetime
 import os
 import platform
 import sys
@@ -102,7 +102,6 @@ def run(
     model.classes = [0]
     stride, names, pt = model.stride, model.names, model.pt
     imgsz = check_img_size(imgsz, s=stride)  # check image size
-
 
     tok = 0
     img_path = r'C:\Users\goback\Documents\test'
@@ -183,10 +182,10 @@ def run(
                         annotator.box_label(xyxy, label, color=colors(c, True))
                     if save_crop:
                         save_one_box(xyxy, imc, file=save_dir / 'crops' / names[c] / f'{p.stem}.jpg', BGR=True)
-            if tok >= 60: tok == 0
+
             if len(det) > 0 :
                 tt = datetime.datetime.now()
-                tick = tt.second
+                tick = int(time.time())
                 if tick > tok :
                     mq.publish('/test',f'{tt},{len(det)},{devi}')
                     save_name = str(tt.strftime('%Y-%m-%d-%H-%M-%S')) + '_' + str(len(det)) 
@@ -196,13 +195,15 @@ def run(
                     tok = tick 
             # Stream results
             im0 = annotator.result()
+            im0 = cv2.resize(im0, dsize=(0,0), fx=0.5, fy=0.5, interpolation=cv2.INTER_AREA)
             if view_img:
                 if platform.system() == 'Linux' and p not in windows:
                     windows.append(p)
                     cv2.namedWindow(str(p), cv2.WINDOW_NORMAL | cv2.WINDOW_KEEPRATIO)  # allow window resize (Linux)
                     cv2.resizeWindow(str(p), im0.shape[1], im0.shape[0])
                 cv2.imshow(devi, im0)
-                cv2.waitKey(1)  # 1 millisecond
+                k = cv2.waitKey(1) & 0xff  # 1 millisecond.
+                if k == 27: break
 
             # Save results (image with detections)
             if save_img:
