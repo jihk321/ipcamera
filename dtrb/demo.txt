@@ -1,0 +1,1 @@
+python demo.py --Transformation TPS --FeatureExtraction VGG --SequenceModeling BiLSTM --Prediction CTC --image_folder C:\Users\goback\Downloads\lpr\exp22\one_line --saved_model models\best_accuracy.pth
