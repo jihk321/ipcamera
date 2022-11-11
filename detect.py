@@ -47,7 +47,6 @@ from utils.general import (LOGGER, Profile, check_file, check_img_size, check_im
 from utils.plots import Annotator, colors, save_one_box
 from utils.torch_utils import select_device, smart_inference_mode
 
-
 @smart_inference_mode()
 def run(
         weights=ROOT / 'yolov5s.pt',  # model path or triton URL
@@ -78,6 +77,9 @@ def run(
         dnn=False,  # use OpenCV DNN for ONNX inference
         vid_stride=1,  # video frame-rate stride
         ip = 'localhost',
+        topic = '/test', 
+        img_path = 'C:\img',
+        log = 'C:\img'
 ):
     source = str(source)
     save_img = not nosave and not source.endswith('.txt')  # save inference images
@@ -88,11 +90,7 @@ def run(
     if is_url and is_file:
         source = check_file(source)  # download
 
-    print(opt)
-    client = mqtt.Client()
-    client.connect(opt.ip, 1883)
-    client.loop_start()
-    mq = client
+    if not os.path.isdir(opt.img_path) : os.mkdir(opt.img_path)
     # Directories
     save_dir = increment_path(Path(project) / name, exist_ok=exist_ok)  # increment run
     (save_dir / 'labels' if save_txt else save_dir).mkdir(parents=True, exist_ok=True)  # make dir
@@ -103,9 +101,13 @@ def run(
     model.classes = [0]
     stride, names, pt = model.stride, model.names, model.pt
     imgsz = check_img_size(imgsz, s=stride)  # check image size
+    
+    tok, log_path = 0, os.path.join(log,'log.txt')
+    
 
-    tok = 0
-    img_path = r'C:\Users\goback\Documents\test'
+    client = mqtt.Client()
+    client.connect(ip, 1883)
+    client.loop_start()
     # Dataloader
     bs = 1  # batch_size
     if webcam:
@@ -119,9 +121,15 @@ def run(
     vid_path, vid_writer = [None] * bs, [None] * bs
 
     # Run inference
+    message = []
     model.warmup(imgsz=(1 if pt or model.triton else bs, 3, *imgsz))  # warmup
     seen, windows, dt = 0, [], (Profile(), Profile(), Profile())
-    for path, im, im0s, vid_cap, s, info in dataset:
+    for path, im, im0s, vid_cap, s, info, error in dataset:
+        if len(error) > 0 :
+            for index, err in enumerate(error):
+                f = open(log_path, 'a')
+                f.write(f'[ERRPR] {datetime.datetime.now()} : {err}\n')
+                f.close()
         with dt[0]:
             im = torch.from_numpy(im).to(model.device)
             im = im.half() if model.fp16 else im.float()  # uint8 to fp16/32
@@ -188,7 +196,19 @@ def run(
                 tt = datetime.datetime.now()
                 tick = int(time.time())
                 if tick > tok :
-                    mq.publish('/test',f'{tt},{len(det)},{devi}')
+                    if client.is_connected() : 
+                        if len(message) > 0 :
+                            for i, s in enumerate(message): client.publish(topic, s)
+                            message.clear()
+                        else : client.publish(topic,f'{tt},{len(det)},{devi}')
+                    else:
+                        f = open(log_path, 'a')
+                        f.write(f'[Warning] {tt} : MQTT서버 연결 안됨 \n')
+                        try : client.connect_async(ip,1883)
+                        except Exception as e: f.write(f'[ERRPR] {datetime.datetime.now()} : {e}\n')
+                        message.append(f'{tt},{len(det)},{devi}')
+                        f.close()
+                    # client.publish(topic,f'{tt},{len(det)},{devi}')
                     save_name = str(tt.strftime('%Y-%m-%d-%H-%M-%S')) + '_' + str(len(det)) 
                     saves = img_path + '\\' + save_name
                     cv2.imwrite(saves + '.jpg',img_s) 
@@ -269,7 +289,9 @@ def parse_opt():
     parser.add_argument('--dnn', action='store_true', help='use OpenCV DNN for ONNX inference')
     parser.add_argument('--vid-stride', type=int, default=10, help='video frame-rate stride')
     parser.add_argument('--ip', type=str, default = 'localhost',help='mqtt server ip')
-    # parser.add_argument('--view', action='store_true', default = False, help='show me the picture')
+    parser.add_argument('--topic', type=str, default = '/test',help='mqtt send topic')
+    parser.add_argument('--img_path', type=str, default = 'C:\img',help='save images path')
+    parser.add_argument('--log', type=str, default = 'C:\img', help='write log path')
     opt = parser.parse_args()
     opt.imgsz *= 2 if len(opt.imgsz) == 1 else 1  # expand
     print_args(vars(opt))

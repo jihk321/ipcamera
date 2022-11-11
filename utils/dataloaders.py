@@ -350,6 +350,16 @@ class LoadStreams:
         self.vid_stride = vid_stride  # video frame-rate stride
         sources = Path(sources).read_text().rsplit() if os.path.isfile(sources) else [sources]
         self.device_info = []
+        self.error = []
+
+        for index, so in enumerate(sources):
+            cap = cv2.VideoCapture(so)
+            if cap.isOpened() == True : continue
+            else:
+                self.error.append(so) 
+                sources.remove(so)
+                continue
+
         for index, letter in enumerate(sources):
             if 'cam0_0' in letter : self.device_info.append('lpr')
             else :
@@ -373,8 +383,8 @@ class LoadStreams:
 
                     camera_device = dict(zip(device_data,device_values))
                     self.device_info.append(camera_device['DeviceName'])
+
         n = len(sources)
-        print(self.device_info)
         self.sources = [clean_str(x) for x in sources]  # clean source names for later
         self.imgs, self.fps, self.frames, self.threads = [None] * n, [0] * n, [0] * n, [None] * n
         # self.device_name = 
@@ -390,7 +400,8 @@ class LoadStreams:
                 assert not is_colab(), '--source 0 webcam unsupported on Colab. Rerun command in a local environment.'
                 assert not is_kaggle(), '--source 0 webcam unsupported on Kaggle. Rerun command in a local environment.'
             cap = cv2.VideoCapture(s)
-            assert cap.isOpened(), f'{st}Failed to open {s}'
+            assert cap.isOpened(), f'{st}Failed to open {s}'   
+
             w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
             h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
             fps = cap.get(cv2.CAP_PROP_FPS)  # warning: may return 0 or nan
@@ -445,7 +456,7 @@ class LoadStreams:
             im = im[..., ::-1].transpose((0, 3, 1, 2))  # BGR to RGB, BHWC to BCHW
             im = np.ascontiguousarray(im)  # contiguous
 
-        return self.sources, im, im0, None, '', self.device_info
+        return self.sources, im, im0, None, '', self.device_info, self.error
 
     def __len__(self):
         return len(self.sources)  # 1E12 frames = 32 streams at 30 FPS for 30 years
