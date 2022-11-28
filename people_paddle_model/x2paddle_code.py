@@ -122,12 +122,12 @@ class DetectionModel(paddle.nn.Layer):
         self.silu55 = paddle.nn.Silu()
         self.conv2d56 = paddle.nn.Conv2D(out_channels=256, kernel_size=(1, 1), in_channels=256)
         self.silu56 = paddle.nn.Silu()
-        self.x731 = self.create_parameter(dtype='float32', shape=(1, 3, 20, 20, 2), default_initializer=paddle.nn.initializer.Constant(value=0.0))
-        self.x732 = self.create_parameter(dtype='float32', shape=(1, 3, 20, 20, 2), default_initializer=paddle.nn.initializer.Constant(value=0.0))
-        self.x733 = self.create_parameter(dtype='float32', shape=(1, 3, 40, 40, 2), default_initializer=paddle.nn.initializer.Constant(value=0.0))
-        self.x734 = self.create_parameter(dtype='float32', shape=(1, 3, 40, 40, 2), default_initializer=paddle.nn.initializer.Constant(value=0.0))
-        self.x735 = self.create_parameter(dtype='float32', shape=(1, 3, 80, 80, 2), default_initializer=paddle.nn.initializer.Constant(value=0.0))
-        self.x737 = self.create_parameter(dtype='float32', shape=(1, 3, 80, 80, 2), default_initializer=paddle.nn.initializer.Constant(value=0.0))
+        self.x731 = self.create_parameter(dtype='float16', shape=(1, 3, 20, 20, 2), default_initializer=paddle.nn.initializer.Constant(value=0.0))
+        self.x732 = self.create_parameter(dtype='float16', shape=(1, 3, 20, 20, 2), default_initializer=paddle.nn.initializer.Constant(value=0.0))
+        self.x733 = self.create_parameter(dtype='float16', shape=(1, 3, 40, 40, 2), default_initializer=paddle.nn.initializer.Constant(value=0.0))
+        self.x734 = self.create_parameter(dtype='float16', shape=(1, 3, 40, 40, 2), default_initializer=paddle.nn.initializer.Constant(value=0.0))
+        self.x735 = self.create_parameter(dtype='float16', shape=(1, 3, 80, 80, 2), default_initializer=paddle.nn.initializer.Constant(value=0.0))
+        self.x737 = self.create_parameter(dtype='float16', shape=(1, 3, 80, 80, 2), default_initializer=paddle.nn.initializer.Constant(value=0.0))
         self.conv2d57 = paddle.nn.Conv2D(out_channels=255, kernel_size=(1, 1), in_channels=64)
         self.sigmoid0 = paddle.nn.Sigmoid()
         self.conv2d58 = paddle.nn.Conv2D(out_channels=255, kernel_size=(1, 1), in_channels=128)
@@ -355,7 +355,7 @@ class DetectionModel(paddle.nn.Layer):
 
 def main(x0):
     # There are 1 inputs.
-    # x0: shape-[1, 3, 640, 640], type-float32.
+    # x0: shape-[1, 3, 640, 640], type-float16.
     paddle.disable_static()
     params = paddle.load(r'C:\Users\goback\Downloads\yolov5-master\yolov5-master\people_paddle_model\model.pdparams')
     model = DetectionModel()

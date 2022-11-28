@@ -16,7 +16,9 @@ async def reconnection(mqtt) :
         return mqtt
 
 client = mqtt.Client()
+
 client.connect('localhost', 1883)
+print(type(client))
 client.loop_start()
 time.sleep(1)
 

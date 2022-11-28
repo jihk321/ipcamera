@@ -341,6 +341,18 @@ class LoadImages:
 
 
 class LoadStreams:
+    """ LoadStreams 
+    txt 파일을 읽어 rtsp 연결 해 이미지를 리턴하는 클래스
+    Args :
+        sources = streams.txt 파일
+        vid_stride = 건너 뛸 프레임 수
+    Note :
+        for index, so in enumerate(sources) 라인 : 연결 할 수 있는지 체크, 연결이 안될시 error에 주소를 입력하고 연결할(sources)에서 삭제
+        for index, letter in enumerate(sources) 라인 : 한화 카메일경우 api를 사용해 카메라 정보를 가져옴.
+    Returns:
+            device_info : 한화 api 호출로 가져온 카메라 이름 
+            error : rtsp 연결 실패시 연결 실패한 rtsp 주소 
+    """
     # YOLOv5 streamloader, i.e. `python detect.py --source 'rtsp://example.com/media.mp4'  # RTSP, RTMP, HTTP streams`
     def __init__(self, sources='streams.txt', img_size=640, stride=32, auto=True, transforms=None, vid_stride=1):
         torch.backends.cudnn.benchmark = True  # faster for fixed-size inference
@@ -361,13 +373,13 @@ class LoadStreams:
                 continue
 
         for index, letter in enumerate(sources):
-            if 'cam0_0' in letter : self.device_info.append('lpr')
-            else :
+            if 'cam0_0' in letter : self.device_info.append('lpr') # flexwatch 카메라인 경우 카메라 id를 lpr로 지정 
+            elif 'profile2/media.smp' in letter: # 한화 카메라인 경우
                 letter = letter.split('//')[1].split('/')[0]
                 id = letter.split(':')[0]
                 pw = letter.split(':')[1].split('@')[0]
                 ip = letter.split(':')[1].split('@')[1]
-                if ip == '221.159.47.49' : port = '10183'
+                if ip == '221.159.47.49' : port = '10183' # http port가 기본값(80)이 아닌 경우 
                 else : port = '80'
                 # port = letter.split(':')[2]
                 url = f'http://{ip}:{port}/stw-cgi/system.cgi?'
@@ -383,6 +395,7 @@ class LoadStreams:
 
                     camera_device = dict(zip(device_data,device_values))
                     self.device_info.append(camera_device['DeviceName'])
+            else : self.device_info.append(f'cams{index}')
 
         n = len(sources)
         self.sources = [clean_str(x) for x in sources]  # clean source names for later
